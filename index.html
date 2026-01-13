@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RecipeScaler | Precision Recipe Scaling Tool</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Slab:wght@400;500&display=swap">
+    <style>
+        /* ===== CSS RESET & BASE ===== */
+        :root {
+            /* Default theme (Light) - will be overridden by JS */
+            --primary-color: #4285F4;
+            --primary-dark: #3367D6;
+            --secondary-color: #34A853;
+            --warning-color: #FBBC05;
+            --error-color: #EA4335;
+            --surface-color: #FFFFFF;
+            --background-color: #F8F9FA;
+            --card-color: #FFFFFF;
+            --text-primary: #202124;
+            --text-secondary: #5F6368;
+            --text-tertiary: #9AA0A6;
+            --border-color: #DADCE0;
+            --shadow-color: rgba(60, 64, 67, 0.1);
+            --shadow-elevated: rgba(60, 64, 67, 0.2);
+            --transition-speed: 200ms;
+            --border-radius: 8px;
+            --spacing-unit: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color var(--transition-speed) ease,
+                        color var(--transition-speed) ease,
+                        border-color var(--transition-speed) ease;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            padding: var(--spacing-unit);
+        }
+
+        /* ===== LAYOUT SYSTEM ===== */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: calc(var(--spacing-unit) * 3);
+            padding: calc(var(--spacing-unit) * 2);
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .panels-container {
+                grid-column: span 2;
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: calc(var(--spacing-unit) * 3);
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr 2fr 1fr;
+            }
+            .panels-container {
+                grid-column: span 3;
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        /* ===== TYPOGRAPHY ===== */
+        h1, h2, h3, h4 {
+            font-family: 'Roboto Slab', serif;
+            font-weight: 500;
+            margin-bottom: calc(var(--spacing-unit) * 2);
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: var(--primary-color);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: var(--spacing-unit);
+        }
+
+        h3 {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: calc(var(--spacing-unit) * 3);
+        }
+
+        /* ===== COMPONENTS ===== */
+        .card {
+            background-color: var(--card-color);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            padding: calc(var(--spacing-unit) * 3);
+            box-shadow: 0 1px 3px var(--shadow-color);
+        }
+
+        .card:hover {
+            box-shadow: 0 2px 6px var(--shadow-elevated);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: calc(var(--spacing-unit) * 2);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: calc(var(--spacing-unit) * 0.5) var(--spacing-unit);
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* ===== INPUTS & CONTROLS ===== */
+        textarea, input, select, button {
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            padding: calc(var(--spacing-unit) * 1.5);
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        textarea:focus, input:focus, select:focus, button:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        .button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 3);
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-unit);
+        }
+
+        .button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .button-secondary {
+            background-color: var(--surface-color);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .button-secondary:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .slider-container {
+            margin: calc(var(--spacing-unit) * 3) 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-unit);
+        }
+
+        .multiplier-slider {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) var(--slider-value, 50%), var(--border-color) var(--slider-value, 50%) 100%);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .multiplier-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .multiplier-presets {
+            display: flex;
+            gap: var(--spacing-unit);
+            flex-wrap: wrap;
+            margin-top: calc(var(--spacing-unit) * 2);
+        }
+
+        .preset-btn {
+            padding: calc(var(--spacing-unit) * 1) calc(var(--spacing-unit) * 2);
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .preset-btn:hover {
+            background-color: var(--background-color);
+        }
+
+        .preset-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* ===== RECIPE DISPLAY ===== */
+        .recipe-display {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: calc(var(--spacing-unit) * 3);
+            margin-top: calc(var(--spacing-unit) * 2);
+        }
+
+        @media (min-width: 768px) {
+            .recipe-display {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .recipe-column {
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            padding: calc(var(--spacing-unit) * 2);
+            border: 1px solid var(--border-color);
+        }
+
+        .recipe-column h3 {
+            margin-bottom: calc(var(--spacing-unit) * 2);
+            color: var(--text-secondary);
+        }
+
+        .recipe-content {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .scaled-ingredient {
+            background-color: rgba(66, 133, 244, 0.1);
+            border-radius: 4px;
+            padding: 2px 4px;
+            margin: 0 -4px;
+        }
+
+        /* ===== THEME SYSTEM ===== */
+        .theme-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: var(--spacing-unit);
+            margin-top: calc(var(--spacing-unit) * 2);
+        }
+
+        .theme-option {
+            height: 80px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-option.active::after {
+            content: '✓';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(255,255,255,0.9);
+            color: var(--text-primary);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+
+        /* ===== CUSTOMIZATION PANEL ===== */
+        .settings-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background-color: var(--card-color);
+            border-left: 1px solid var(--border-color);
+            box-shadow: -2px 0 12px var(--shadow-color);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: calc(var(--spacing-unit) * 3);
+        }
+
+        .settings-panel.active {
+            display: block;
+        }
+
+        .setting-group {
+            margin-bottom: calc(var(--spacing-unit) * 3);
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: calc(var(--spacing-unit) * 1.5) 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border-color);
+            transition: .3s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        /* ===== UTILITY CLASSES ===== */
+        .flex {
+            display: flex;
+            gap: var(--spacing-unit);
+        }
+
+        .flex-column {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-unit);
+        }
+
+        .space-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-2 { margin-top: calc(var(--spacing-unit) * 2); }
+        .mt-3 { margin-top: calc(var(--spacing-unit) * 3); }
+        .mt-4 { margin-top: calc(var(--spacing-unit) * 4); }
+        .mb-2 { margin-bottom: calc(var(--spacing-unit) * 2); }
+        .mb-3 { margin-bottom: calc(var(--spacing-unit) * 3); }
+
+        .hidden {
+            display: none;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-in {
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            margin-top: calc(var(--spacing-unit) * 6);
+            padding-top: calc(var(--spacing-unit) * 3);
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .credits {
+            text-align: center;
+            margin-top: calc(var(--spacing-unit) * 2);
+        }
+
+        .credits a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .credits a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== HEADER ===== -->
+    <header class="space-between mb-3">
+        <div>
+            <h1>RecipeScaler</h1>
+            <p class="subtitle">Precision recipe scaling for home cooks & bakers</p>
+        </div>
+        <div class="flex">
+            <button id="settingsBtn" class="button-secondary">
+                <span>⚙️</span> Settings
+            </button>
+            <button id="guideBtn" class="button-secondary">
+                <span>📚</span> Guide
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== MAIN CONTAINER ===== -->
+    <div class="container">
+        <!-- ===== LEFT PANEL: INPUT & CONTROLS ===== -->
+        <div class="card">
+            <div class="section-header">
+                <h2>Recipe Input</h2>
+                <span class="badge">Basic</span>
+            </div>
+            
+            <div class="flex-column">
+                <label for="recipeInput">Paste your recipe:</label>
+                <textarea 
+                    id="recipeInput" 
+                    placeholder="Paste your recipe here. Example:
+                    
+2 cups all-purpose flour
+1 cup granulated sugar
+3 large eggs
+1/2 cup unsalted butter
+1 tsp vanilla extract
+1 1/2 tsp baking powder
+Pinch of salt"
+                ></textarea>
+                
+                <div class="flex space-between mt-2">
+                    <div>
+                        <label for="servingsInput">Original Serves:</label>
+                        <input type="number" id="servingsInput" min="1" max="100" value="4" style="width: 80px;">
+                    </div>
+                    <button id="parseBtn" class="button">
+                        <span>🔍</span> Parse Ingredients
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== CENTER PANEL: SCALING CONTROLS ===== -->
+        <div class="card">
+            <div class="section-header">
+                <h2>Scale Recipe</h2>
+                <span class="badge" style="background-color: var(--secondary-color);">Enhanced</span>
+            </div>
+            
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Multiplier:</span>
+                    <span id="multiplierValue">1.0x</span>
+                </div>
+                <input 
+                    type="range" 
+                    id="multiplierSlider" 
+                    class="multiplier-slider" 
+                    min="0.25" 
+                    max="5" 
+                    step="0.1" 
+                    value="1"
+                >
+                
+                <div class="multiplier-presets">
+                    <button class="preset-btn active" data-multiplier="1">1x (Original)</button>
+                    <button class="preset-btn" data-multiplier="0.5">½ Recipe</button>
+                    <button class="preset-btn" data-multiplier="2">2x (Double)</button>
+                    <button class="preset-btn" data-multiplier="3">3x (Meal Prep)</button>
+                    <button class="preset-btn" data-multiplier="4">4x (Party)</button>
+                    <input 
+                        type="number" 
+                        id="customMultiplier" 
+                        placeholder="Custom" 
+                        min="0.1" 
+                        max="20" 
+                        step="0.1"
+                        style="width: 100px; padding: 8px;"
+                    >
+                </div>
+            </div>
+            
+            <div class="flex-column mt-3">
+                <h3>Unit System</h3>
+                <div class="flex">
+                    <button id="imperialBtn" class="button" style="flex: 1;">Imperial (cups, oz)</button>
+                    <button id="metricBtn" class="button-secondary" style="flex: 1;">Metric (g, ml)</button>
+                </div>
+            </div>
+            
+            <div class="flex-column mt-3">
+                <h3>Export Options</h3>
+                <div class="flex">
+                    <button id="copyBtn" class="button-secondary" style="flex: 1;">📋 Copy Scaled</button>
+                    <button id="printBtn" class="button-secondary" style="flex: 1;">🖨️ Print</button>
+                    <button id="exportBtn" class="button" style="flex: 1;">💾 Export Config</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== RIGHT PANEL: THEME & TOOLS ===== -->
+        <div class="card">
+            <div class="section-header">
+                <h2>Themes & Tools</h2>
+                <span class="badge" style="background-color: var(--warning-color);">Advanced</span>
+            </div>
+            
+            <div class="theme-selector">
+                <div class="theme-option active" data-theme="light" style="background: linear-gradient(135deg, #4285F4, #34A853);">
+                    Light
+                </div>
+                <div class="theme-option" data-theme="dark" style="background: linear-gradient(135deg, #0F0F0F, #2D2D2D);">
+                    Dark
+                </div>
+                <div class="theme-option" data-theme="midnight" style="background: linear-gradient(135deg, #0A2647, #144272);">
+                    Midnight
+                </div>
+                <div class="theme-option" data-theme="emerald" style="background: linear-gradient(135deg, #065F46, #047857);">
+                    Emerald
+                </div>
+                <div class="theme-option" data-theme="sunset" style="background: linear-gradient(135deg, #EA580C, #DC2626);">
+                    Sunset
+                </div>
+                <div class="theme-option" data-theme="minimal" style="background: linear-gradient(135deg, #6B7280, #9CA3AF); color: #1F2937;">
+                    Minimal
+                </div>
+                <div class="theme-option" data-theme="custom" style="background: linear-gradient(135deg, #7C3AED, #EC4899);">
+                    Custom
+                </div>
+            </div>
+            
+            <div class="flex-column mt-3">
+                <h3>Advanced Tools</h3>
+                <button id="shoppingListBtn" class="button-secondary">🛒 Generate Shopping List</button>
+                <button id="panSizeBtn" class="button-secondary mt-2">🥘 Pan Size Calculator</button>
+                <button id="resetBtn" class="button-secondary mt-2">🔄 Reset All</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== RECIPE DISPLAY PANEL ===== -->
+    <div class="panels-container">
+        <div class="card">
+            <h3>Original Recipe</h3>
+            <div id="originalDisplay" class="recipe-content">
+                Paste a recipe to begin...
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>Scaled Recipe <span id="scaleIndicator">(1.0x)</span></h3>
+            <div id="scaledDisplay" class="recipe-content">
+                Scaled recipe will appear here...
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>Ingredient Analysis</h3>
+            <div id="analysisDisplay" class="recipe-content">
+                No ingredients parsed yet.
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>Equipment Notes</h3>
+            <div id="equipmentDisplay" class="recipe-content">
+                Scaling suggestions will appear here.
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== SETTINGS PANEL ===== -->
+    <div id="settingsPanel" class="settings-panel">
+        <div class="section-header">
+            <h2>Settings & Customization</h2>
+            <button id="closeSettings" class="button-secondary">✕</button>
+        </div>
+        
+        <div class="setting-group">
+            <h3>Display Settings</h3>
+            <div class="setting-item">
+                <span>Show fractions instead of decimals</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="useFractions" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <span>Highlight scaled ingredients</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="highlightScaled" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <span>Auto-parse on paste</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="autoParse">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="setting-group">
+            <h3>Scaling Behavior</h3>
+            <div class="setting-item">
+                <span>Round to nearest 1/8</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="roundToEighth" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <span>Show equipment warnings</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="showEquipmentWarnings" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="setting-group">
+            <h3>Import & Export</h3>
+            <div class="flex-column">
+                <button id="importBtn" class="button-secondary">📥 Import Configuration</button>
+                <button id="exportConfigBtn" class="button mt-2">📤 Export Configuration</button>
+                <input type="file" id="importFile" accept=".json" hidden>
+            </div>
+        </div>
+        
+        <div class="setting-group">
+            <h3>Reset Options</h3>
+            <button id="resetSettingsBtn" class="button-secondary">Reset to Defaults</button>
+        </div>
+    </div>
+
+    <!-- ===== USER GUIDE ===== -->
+    <div id="guidePanel" class="settings-panel">
+        <div class="section-header">
+            <h2>User Guide</h2>
+            <button id="closeGuide" class="button-secondary">✕</button>
+        </div>
+        
+        <div class="setting-group">
+            <h3>Getting Started</h3>
+            <p>RecipeScaler helps you adjust recipes for any number of servings. Simply paste your recipe, set your desired scaling, and get perfectly adjusted ingredient amounts.</p>
+        </div>
+        
+        <div class="setting-group">
+            <h3>Basic Features</h3>
+            <ul style="padding-left: 20px; margin-top: 10px;">
+                <li><strong>Paste Recipe:</strong> Copy-paste any recipe into the input box</li>
+                <li><strong>Automatic Parsing:</strong> Click "Parse Ingredients" to identify amounts</li>
+                <li><strong>Adjust Servings:</strong> Use the slider or presets to scale the recipe</li>
+                <li><strong>View Results:</strong> See original and scaled recipes side-by-side</li>
+            </ul>
+        </div>
+        
+        <div class="setting-group">
+            <h3>Enhanced Features</h3>
+            <ul style="padding-left: 20px; margin-top: 10px;">
+                <li><strong>Unit Conversion:</strong> Switch between Imperial and Metric systems</li>
+                <li><strong>Custom Multipliers:</strong> Enter exact scaling factors</li>
+                <li><strong>Export Options:</strong> Copy, print, or export your scaled recipe</li>
+                <li><strong>Theme Selection:</strong> Choose from 7 color themes</li>
+            </ul>
+        </div>
+        
+        <div class="setting-group">
+            <h3>Advanced Features</h3>
+            <ul style="padding-left: 20px; margin-top: 10px;">
+                <li><strong>Shopping List:</strong> Generate consolidated ingredient lists</li>
+                <li><strong>Pan Calculator:</strong> Adjust baking pan sizes appropriately</li>
+                <li><strong>Custom Settings:</strong> Toggle display preferences and behaviors</li>
+                <li><strong>Import/Export Config:</strong> Save and restore all settings</li>
+            </ul>
+        </div>
+        
+        <div class="setting-group">
+            <h3>Tips & Tricks</h3>
+            <ul style="padding-left: 20px; margin-top: 10px;">
+                <li>Recipes parse best when ingredients are on separate lines</li>
+                <li>Use the "½ Recipe" preset for testing new recipes</li>
+                <li>Toggle between fractions and decimals in Settings</li>
+                <li>Export your configuration to use on another device</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <div class="text-center">
+            <p>RecipeScaler is a client-side tool. All processing happens in your browser. No data is sent to any server.</p>
+            <div class="credits">
+                Made with ❤️ by <a href="https://github.com/Aliriyaj007" target="_blank">Aliriyaj007</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ===== MODULAR JAVASCRIPT ARCHITECTURE =====
+        // Using IIFE to create a module pattern and avoid global scope pollution
+        const RecipeScaler = (function() {
+            // ===== STATE MANAGEMENT =====
+            const state = {
+                // App State
+                currentTheme: 'light',
+                useFractions: true,
+                highlightScaled: true,
+                autoParse: false,
+                roundToEighth: true,
+                showEquipmentWarnings: true,
+                isMetric: false,
+                
+                // Recipe State
+                originalRecipe: '',
+                parsedIngredients: [],
+                multiplier: 1,
+                originalServings: 4,
+                unitSystem: 'imperial',
+                
+                // UI State
+                settingsOpen: false,
+                guideOpen: false
+            };
+
+            // ===== THEME DEFINITIONS =====
+            const themes = {
+                light: {
+                    primaryColor: '#4285F4',
+                    primaryDark: '#3367D6',
+                    secondaryColor: '#34A853',
+                    warningColor: '#FBBC05',
+                    errorColor: '#EA4335',
+                    surfaceColor: '#FFFFFF',
+                    backgroundColor: '#F8F9FA',
+                    cardColor: '#FFFFFF',
+                    textPrimary: '#202124',
+                    textSecondary: '#5F6368',
+                    textTertiary: '#9AA0A6',
+                    borderColor: '#DADCE0',
+                    shadowColor: 'rgba(60, 64, 67, 0.1)',
+                    shadowElevated: 'rgba(60, 64, 67, 0.2)'
+                },
+                dark: {
+                    primaryColor: '#8AB4F8',
+                    primaryDark: '#669DF6',
+                    secondaryColor: '#81C995',
+                    warningColor: '#FDD663',
+                    errorColor: '#F28B82',
+                    surfaceColor: '#202124',
+                    backgroundColor: '#0F0F0F',
+                    cardColor: '#2D2D2D',
+                    textPrimary: '#E8EAED',
+                    textSecondary: '#BDC1C6',
+                    textTertiary: '#9AA0A6',
+                    borderColor: '#3C4043',
+                    shadowColor: 'rgba(0, 0, 0, 0.3)',
+                    shadowElevated: 'rgba(0, 0, 0, 0.5)'
+                },
+                midnight: {
+                    primaryColor: '#5B8DEF',
+                    primaryDark: '#3B78E3',
+                    secondaryColor: '#48A860',
+                    warningColor: '#FFB74D',
+                    errorColor: '#EF5350',
+                    surfaceColor: '#0A2647',
+                    backgroundColor: '#051C38',
+                    cardColor: '#144272',
+                    textPrimary: '#E3F2FD',
+                    textSecondary: '#90CAF9',
+                    textTertiary: '#64B5F6',
+                    borderColor: '#1E3A8A',
+                    shadowColor: 'rgba(0, 20, 40, 0.4)',
+                    shadowElevated: 'rgba(0, 20, 40, 0.6)'
+                },
+                emerald: {
+                    primaryColor: '#10B981',
+                    primaryDark: '#059669',
+                    secondaryColor: '#3B82F6',
+                    warningColor: '#F59E0B',
+                    errorColor: '#EF4444',
+                    surfaceColor: '#065F46',
+                    backgroundColor: '#047857',
+                    cardColor: '#064E3B',
+                    textPrimary: '#D1FAE5',
+                    textSecondary: '#A7F3D0',
+                    textTertiary: '#6EE7B7',
+                    borderColor: '#047857',
+                    shadowColor: 'rgba(4, 120, 87, 0.3)',
+                    shadowElevated: 'rgba(4, 120, 87, 0.5)'
+                },
+                sunset: {
+                    primaryColor: '#EA580C',
+                    primaryDark: '#C2410C',
+                    secondaryColor: '#DC2626',
+                    warningColor: '#F59E0B',
+                    errorColor: '#B91C1C',
+                    surfaceColor: '#FEF3C7',
+                    backgroundColor: '#FFEDD5',
+                    cardColor: '#FED7AA',
+                    textPrimary: '#431407',
+                    textSecondary: '#9A3412',
+                    textTertiary: '#C2410C',
+                    borderColor: '#FDBA74',
+                    shadowColor: 'rgba(234, 88, 12, 0.2)',
+                    shadowElevated: 'rgba(234, 88, 12, 0.3)'
+                },
+                minimal: {
+                    primaryColor: '#6B7280',
+                    primaryDark: '#4B5563',
+                    secondaryColor: '#9CA3AF',
+                    warningColor: '#D1D5DB',
+                    errorColor: '#EF4444',
+                    surfaceColor: '#F9FAFB',
+                    backgroundColor: '#FFFFFF',
+                    cardColor: '#FFFFFF',
+                    textPrimary: '#1F2937',
+                    textSecondary: '#4B5563',
+                    textTertiary: '#9CA3AF',
+                    borderColor: '#E5E7EB',
+                    shadowColor: 'rgba(0, 0, 0, 0.05)',
+                    shadowElevated: 'rgba(0, 0, 0, 0.1)'
+                },
+                custom: {
+                    primaryColor: '#7C3AED',
+                    primaryDark: '#6D28D9',
+                    secondaryColor: '#EC4899',
+                    warningColor: '#F59E0B',
+                    errorColor: '#EF4444',
+                    surfaceColor: '#F5F3FF',
+                    backgroundColor: '#FAF5FF',
+                    cardColor: '#FFFFFF',
+                    textPrimary: '#1F2937',
+                    textSecondary: '#4B5563',
+                    textTertiary: '#9CA3AF',
+                    borderColor: '#DDD6FE',
+                    shadowColor: 'rgba(124, 58, 237, 0.1)',
+                    shadowElevated: 'rgba(124, 58, 237, 0.2)'
+                }
+            };
+
+            // ===== UTILITY FUNCTIONS =====
+            const utils = {
+                // Fraction conversion utilities
+                toFraction: function(decimal) {
+                    if (!state.useFractions) return decimal.toFixed(2);
+                    
+                    const whole = Math.floor(decimal);
+                    const fraction = decimal - whole;
+                    
+                    if (fraction === 0) return whole.toString();
+                    
+                    const fractions = [
+                        [0.125, '⅛'], [0.25, '¼'], [0.333, '⅓'], [0.375, '⅜'],
+                        [0.5, '½'], [0.625, '⅝'], [0.666, '⅔'], [0.75, '¾'],
+                        [0.875, '⅞']
+                    ];
+                    
+                    if (state.roundToEighth) {
+                        for (const [value, symbol] of fractions) {
+                            if (Math.abs(fraction - value) < 0.03) {
+                                return whole > 0 ? `${whole} ${symbol}` : symbol;
+                            }
+                        }
+                    }
+                    
+                    // If no close fraction found, use decimal
+                    return decimal.toFixed(2);
+                },
+
+                // Parse ingredient line
+                parseIngredient: function(line) {
+                    const patterns = [
+                        // Matches "1 1/2 cups flour"
+                        /^(\d+(?:\s+\d+\/\d+)?)\s+([a-zA-Z]+)\s+(.+)/,
+                        // Matches "1/2 cup flour"
+                        /^(\d+\/\d+)\s+([a-zA-Z]+)\s+(.+)/,
+                        // Matches "3 eggs"
+                        /^(\d+)\s+(.+)/,
+                        // Matches "Pinch of salt"
+                        /^([a-zA-Z]+)\s+(.+)/,
+                        // Matches "Salt" (no amount)
+                        /^(.+)/
+                    ];
+
+                    for (const pattern of patterns) {
+                        const match = line.match(pattern);
+                        if (match) {
+                            return {
+                                amount: match[1] || '',
+                                unit: match[2] || '',
+                                name: match[3] || match[2] || match[1] || '',
+                                original: line
+                            };
+                        }
+                    }
+                    
+                    return { amount: '', unit: '', name: line, original: line };
+                },
+
+                // Scale a single ingredient
+                scaleIngredient: function(ingredient, multiplier) {
+                    if (!ingredient.amount || isNaN(parseFloat(ingredient.amount))) {
+                        return { ...ingredient, scaledAmount: ingredient.amount };
+                    }
+
+                    // Handle fractions in amount
+                    let amount = ingredient.amount;
+                    if (amount.includes('/')) {
+                        if (amount.includes(' ')) {
+                            const [whole, frac] = amount.split(' ');
+                            const [num, den] = frac.split('/');
+                            amount = parseFloat(whole) + (parseInt(num) / parseInt(den));
+                        } else {
+                            const [num, den] = amount.split('/');
+                            amount = parseInt(num) / parseInt(den);
+                        }
+                    } else {
+                        amount = parseFloat(amount);
+                    }
+
+                    const scaled = amount * multiplier;
+                    return {
+                        ...ingredient,
+                        scaledAmount: scaled,
+                        displayAmount: this.toFraction(scaled)
+                    };
+                },
+
+                // Unit conversion
+                convertUnit: function(ingredient, toMetric) {
+                    if (!toMetric) return ingredient;
+                    
+                    const conversions = {
+                        'cup': { metric: 'g', factor: 240 },
+                        'cups': { metric: 'g', factor: 240 },
+                        'tablespoon': { metric: 'ml', factor: 15 },
+                        'tablespoons': { metric: 'ml', factor: 15 },
+                        'tbsp': { metric: 'ml', factor: 15 },
+                        'teaspoon': { metric: 'ml', factor: 5 },
+                        'teaspoons': { metric: 'ml', factor: 5 },
+                        'tsp': { metric: 'ml', factor: 5 },
+                        'ounce': { metric: 'g', factor: 28.35 },
+                        'ounces': { metric: 'g', factor: 28.35 },
+                        'oz': { metric: 'g', factor: 28.35 },
+                        'pound': { metric: 'g', factor: 453.6 },
+                        'pounds': { metric: 'g', factor: 453.6 },
+                        'lb': { metric: 'g', factor: 453.6 }
+                    };
+
+                    if (conversions[ingredient.unit.toLowerCase()]) {
+                        const conv = conversions[ingredient.unit.toLowerCase()];
+                        return {
+                            ...ingredient,
+                            unit: conv.metric,
+                            displayAmount: Math.round(ingredient.scaledAmount * conv.factor)
+                        };
+                    }
+                    
+                    return ingredient;
+                },
+
+                // Generate equipment notes
+                generateEquipmentNotes: function(ingredients, multiplier) {
+                    const notes = [];
+                    
+                    if (multiplier > 3) {
+                        notes.push('• Consider using multiple mixing bowls');
+                        notes.push('• Check if your oven can handle large batches');
+                    }
+                    
+                    if (multiplier > 4) {
+                        notes.push('• You may need to bake in multiple batches');
+                        notes.push('• Use a kitchen scale for accuracy');
+                    }
+                    
+                    const totalVolume = ingredients.reduce((sum, ing) => {
+                        if (ing.unit.includes('cup')) return sum + (ing.scaledAmount || 0);
+                        return sum;
+                    }, 0);
+                    
+                    if (totalVolume > 8) {
+                        notes.push('• Use a large mixing bowl (at least 8 quarts)');
+                    }
+                    
+                    return notes.length > 0 ? notes.join('\n') : 'No special equipment needed for this scale.';
+                }
+            };
+
+            // ===== DOM ELEMENTS =====
+            const elements = {
+                // Input elements
+                recipeInput: document.getElementById('recipeInput'),
+                servingsInput: document.getElementById('servingsInput'),
+                parseBtn: document.getElementById('parseBtn'),
+                
+                // Scale controls
+                multiplierSlider: document.getElementById('multiplierSlider'),
+                multiplierValue: document.getElementById('multiplierValue'),
+                customMultiplier: document.getElementById('customMultiplier'),
+                
+                // Unit controls
+                imperialBtn: document.getElementById('imperialBtn'),
+                metricBtn: document.getElementById('metricBtn'),
+                
+                // Display elements
+                originalDisplay: document.getElementById('originalDisplay'),
+                scaledDisplay: document.getElementById('scaledDisplay'),
+                analysisDisplay: document.getElementById('analysisDisplay'),
+                equipmentDisplay: document.getElementById('equipmentDisplay'),
+                scaleIndicator: document.getElementById('scaleIndicator'),
+                
+                // Theme elements
+                themeOptions: document.querySelectorAll('.theme-option'),
+                
+                // Button elements
+                presetBtns: document.querySelectorAll('.preset-btn'),
+                copyBtn: document.getElementById('copyBtn'),
+                printBtn: document.getElementById('printBtn'),
+                exportBtn: document.getElementById('exportBtn'),
+                shoppingListBtn: document.getElementById('shoppingListBtn'),
+                panSizeBtn: document.getElementById('panSizeBtn'),
+                resetBtn: document.getElementById('resetBtn'),
+                
+                // Settings elements
+                settingsBtn: document.getElementById('settingsBtn'),
+                closeSettings: document.getElementById('closeSettings'),
+                settingsPanel: document.getElementById('settingsPanel'),
+                
+                // Guide elements
+                guideBtn: document.getElementById('guideBtn'),
+                closeGuide: document.getElementById('closeGuide'),
+                guidePanel: document.getElementById('guidePanel'),
+                
+                // Settings controls
+                useFractions: document.getElementById('useFractions'),
+                highlightScaled: document.getElementById('highlightScaled'),
+                autoParse: document.getElementById('autoParse'),
+                roundToEighth: document.getElementById('roundToEighth'),
+                showEquipmentWarnings: document.getElementById('showEquipmentWarnings'),
+                importBtn: document.getElementById('importBtn'),
+                exportConfigBtn: document.getElementById('exportConfigBtn'),
+                importFile: document.getElementById('importFile'),
+                resetSettingsBtn: document.getElementById('resetSettingsBtn')
+            };
+
+            // ===== UI RENDER FUNCTIONS =====
+            const render = {
+                // Apply current theme to CSS variables
+                applyTheme: function() {
+                    const theme = themes[state.currentTheme];
+                    for (const [key, value] of Object.entries(theme)) {
+                        document.documentElement.style.setProperty(`--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`, value);
+                    }
+                    
+                    // Update active theme indicator
+                    elements.themeOptions.forEach(option => {
+                        option.classList.remove('active');
+                        if (option.dataset.theme === state.currentTheme) {
+                            option.classList.add('active');
+                        }
+                    });
+                },
+
+                // Update recipe displays
+                updateRecipeDisplay: function() {
+                    const lines = state.originalRecipe.split('\n');
+                    const scaledLines = [];
+                    const analysis = [];
+                    
+                    state.parsedIngredients = lines.map(line => utils.parseIngredient(line.trim()));
+                    const scaledIngredients = state.parsedIngredients.map(ing => 
+                        utils.scaleIngredient(ing, state.multiplier)
+                    );
+                    
+                    // Display original recipe
+                    elements.originalDisplay.textContent = lines.join('\n');
+                    
+                    // Display scaled recipe with highlighting
+                    let scaledDisplay = '';
+                    scaledIngredients.forEach((ing, index) => {
+                        if (ing.scaledAmount !== undefined) {
+                            const displayLine = `${ing.displayAmount} ${ing.unit} ${ing.name}`.trim();
+                            if (state.highlightScaled && state.multiplier !== 1) {
+                                scaledDisplay += `<span class="scaled-ingredient">${displayLine}</span>\n`;
+                            } else {
+                                scaledDisplay += `${displayLine}\n`;
+                            }
+                            
+                            // Add to analysis
+                            if (ing.amount && !isNaN(parseFloat(ing.amount))) {
+                                analysis.push(`${ing.amount} → ${ing.displayAmount} (${state.multiplier.toFixed(2)}x)`);
+                            }
+                        } else {
+                            scaledDisplay += `${ing.original}\n`;
+                        }
+                    });
+                    
+                    elements.scaledDisplay.innerHTML = scaledDisplay;
+                    
+                    // Update analysis display
+                    if (analysis.length > 0) {
+                        elements.analysisDisplay.textContent = analysis.join('\n');
+                    } else {
+                        elements.analysisDisplay.textContent = 'No measurable ingredients found.';
+                    }
+                    
+                    // Update equipment notes
+                    if (state.showEquipmentWarnings) {
+                        elements.equipmentDisplay.textContent = utils.generateEquipmentNotes(scaledIngredients, state.multiplier);
+                    } else {
+                        elements.equipmentDisplay.textContent = 'Equipment warnings disabled in settings.';
+                    }
+                    
+                    // Update scale indicator
+                    elements.scaleIndicator.textContent = `(${state.multiplier.toFixed(2)}x)`;
+                },
+
+                // Update multiplier display
+                updateMultiplierDisplay: function() {
+                    const value = state.multiplier;
+                    elements.multiplierValue.textContent = `${value.toFixed(2)}x`;
+                    elements.scaleIndicator.textContent = `(${value.toFixed(2)}x)`;
+                    
+                    // Update slider background
+                    const percent = ((value - 0.25) / (5 - 0.25)) * 100;
+                    elements.multiplierSlider.style.setProperty('--slider-value', `${percent}%`);
+                    
+                    // Update active preset
+                    elements.presetBtns.forEach(btn => {
+                        btn.classList.remove('active');
+                        if (Math.abs(parseFloat(btn.dataset.multiplier) - value) < 0.01) {
+                            btn.classList.add('active');
+                        }
+                    });
+                },
+
+                // Update unit buttons
+                updateUnitButtons: function() {
+                    if (state.isMetric) {
+                        elements.imperialBtn.classList.remove('button');
+                        elements.imperialBtn.classList.add('button-secondary');
+                        elements.metricBtn.classList.remove('button-secondary');
+                        elements.metricBtn.classList.add('button');
+                    } else {
+                        elements.imperialBtn.classList.remove('button-secondary');
+                        elements.imperialBtn.classList.add('button');
+                        elements.metricBtn.classList.remove('button');
+                        elements.metricBtn.classList.add('button-secondary');
+                    }
+                },
+
+                // Show notification
+                showNotification: function(message, type = 'info') {
+                    const notification = document.createElement('div');
+                    notification.className = 'card';
+                    notification.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        z-index: 10000;
+                        background-color: ${type === 'success' ? 'var(--secondary-color)' : 'var(--primary-color)'};
+                        color: white;
+                        animation: fadeIn 0.3s ease;
+                        max-width: 300px;
+                    `;
+                    notification.textContent = message;
+                    
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        notification.style.opacity = '0';
+                        notification.style.transform = 'translateY(-10px)';
+                        setTimeout(() => notification.remove(), 300);
+                    }, 3000);
+                }
+            };
+
+            // ===== EVENT HANDLERS =====
+            const handlers = {
+                // Initialize all event listeners
+                init: function() {
+                    // Recipe input events
+                    elements.recipeInput.addEventListener('input', (e) => {
+                        state.originalRecipe = e.target.value;
+                        if (state.autoParse) {
+                            handlers.parseRecipe();
+                        }
+                    });
+                    
+                    elements.parseBtn.addEventListener('click', handlers.parseRecipe);
+                    
+                    // Scale control events
+                    elements.multiplierSlider.addEventListener('input', (e) => {
+                        state.multiplier = parseFloat(e.target.value);
+                        render.updateMultiplierDisplay();
+                        render.updateRecipeDisplay();
+                    });
+                    
+                    elements.customMultiplier.addEventListener('change', (e) => {
+                        const value = parseFloat(e.target.value);
+                        if (value >= 0.1 && value <= 20) {
+                            state.multiplier = value;
+                            elements.multiplierSlider.value = value;
+                            render.updateMultiplierDisplay();
+                            render.updateRecipeDisplay();
+                        }
+                    });
+                    
+                    // Preset button events
+                    elements.presetBtns.forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            state.multiplier = parseFloat(btn.dataset.multiplier);
+                            elements.multiplierSlider.value = state.multiplier;
+                            elements.customMultiplier.value = '';
+                            render.updateMultiplierDisplay();
+                            render.updateRecipeDisplay();
+                        });
+                    });
+                    
+                    // Unit system events
+                    elements.imperialBtn.addEventListener('click', () => {
+                        state.isMetric = false;
+                        render.updateUnitButtons();
+                        render.updateRecipeDisplay();
+                    });
+                    
+                    elements.metricBtn.addEventListener('click', () => {
+                        state.isMetric = true;
+                        render.updateUnitButtons();
+                        render.updateRecipeDisplay();
+                    });
+                    
+                    // Theme selection events
+                    elements.themeOptions.forEach(option => {
+                        option.addEventListener('click', () => {
+                            state.currentTheme = option.dataset.theme;
+                            render.applyTheme();
+                        });
+                    });
+                    
+                    // Button events
+                    elements.copyBtn.addEventListener('click', handlers.copyToClipboard);
+                    elements.printBtn.addEventListener('click', handlers.printRecipe);
+                    elements.exportBtn.addEventListener('click', handlers.exportConfiguration);
+                    elements.shoppingListBtn.addEventListener('click', handlers.generateShoppingList);
+                    elements.panSizeBtn.addEventListener('click', handlers.showPanCalculator);
+                    elements.resetBtn.addEventListener('click', handlers.resetAll);
+                    
+                    // Settings panel events
+                    elements.settingsBtn.addEventListener('click', handlers.openSettings);
+                    elements.closeSettings.addEventListener('click', handlers.closeSettings);
+                    elements.guideBtn.addEventListener('click', handlers.openGuide);
+                    elements.closeGuide.addEventListener('click', handlers.closeGuide);
+                    
+                    // Settings control events
+                    elements.useFractions.addEventListener('change', (e) => {
+                        state.useFractions = e.target.checked;
+                        render.updateRecipeDisplay();
+                    });
+                    
+                    elements.highlightScaled.addEventListener('change', (e) => {
+                        state.highlightScaled = e.target.checked;
+                        render.updateRecipeDisplay();
+                    });
+                    
+                    elements.autoParse.addEventListener('change', (e) => {
+                        state.autoParse = e.target.checked;
+                    });
+                    
+                    elements.roundToEighth.addEventListener('change', (e) => {
+                        state.roundToEighth = e.target.checked;
+                        render.updateRecipeDisplay();
+                    });
+                    
+                    elements.showEquipmentWarnings.addEventListener('change', (e) => {
+                        state.showEquipmentWarnings = e.target.checked;
+                        render.updateRecipeDisplay();
+                    });
+                    
+                    elements.importBtn.addEventListener('click', () => {
+                        elements.importFile.click();
+                    });
+                    
+                    elements.importFile.addEventListener('change', handlers.importConfiguration);
+                    elements.exportConfigBtn.addEventListener('click', handlers.exportFullConfiguration);
+                    elements.resetSettingsBtn.addEventListener('click', handlers.resetSettings);
+                    
+                    // Initialize UI
+                    render.applyTheme();
+                    render.updateUnitButtons();
+                    render.updateMultiplierDisplay();
+                },
+
+                // Parse recipe button handler
+                parseRecipe: function() {
+                    if (!state.originalRecipe.trim()) {
+                        render.showNotification('Please enter a recipe first', 'error');
+                        return;
+                    }
+                    
+                    render.updateRecipeDisplay();
+                    render.showNotification('Recipe parsed successfully', 'success');
+                },
+
+                // Copy to clipboard handler
+                copyToClipboard: function() {
+                    const scaledText = elements.scaledDisplay.textContent;
+                    navigator.clipboard.writeText(scaledText)
+                        .then(() => render.showNotification('Copied to clipboard', 'success'))
+                        .catch(() => render.showNotification('Failed to copy', 'error'));
+                },
+
+                // Print handler
+                printRecipe: function() {
+                    const printContent = `
+                        <html>
+                            <head>
+                                <title>RecipeScaler - Scaled Recipe</title>
+                                <style>
+                                    body { font-family: Arial, sans-serif; padding: 20px; }
+                                    h1 { color: #4285F4; }
+                                    .scaled { background: #f0f7ff; padding: 10px; margin: 10px 0; }
+                                </style>
+                            </head>
+                            <body>
+                                <h1>Scaled Recipe (${state.multiplier.toFixed(2)}x)</h1>
+                                <div class="scaled">
+                                    ${elements.scaledDisplay.textContent.replace(/\n/g, '<br>')}
+                                </div>
+                                <p><small>Generated by RecipeScaler</small></p>
+                            </body>
+                        </html>
+                    `;
+                    
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(printContent);
+                    printWindow.document.close();
+                    printWindow.print();
+                },
+
+                // Export configuration handler
+                exportConfiguration: function() {
+                    const config = {
+                        app: 'RecipeScaler',
+                        version: '1.0',
+                        timestamp: new Date().toISOString(),
+                        state: {
+                            multiplier: state.multiplier,
+                            originalServings: state.originalServings,
+                            unitSystem: state.unitSystem,
+                            currentTheme: state.currentTheme
+                        },
+                        recipe: state.originalRecipe
+                    };
+                    
+                    const dataStr = JSON.stringify(config, null, 2);
+                    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                    
+                    const exportFileDefaultName = `recipe-scaler-${new Date().toISOString().slice(0,10)}.json`;
+                    
+                    const linkElement = document.createElement('a');
+                    linkElement.setAttribute('href', dataUri);
+                    linkElement.setAttribute('download', exportFileDefaultName);
+                    linkElement.click();
+                    
+                    render.showNotification('Configuration exported', 'success');
+                },
+
+                // Import configuration handler
+                importConfiguration: function(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const config = JSON.parse(e.target.result);
+                            
+                            if (config.app !== 'RecipeScaler') {
+                                throw new Error('Invalid configuration file');
+                            }
+                            
+                            // Import state
+                            if (config.state) {
+                                if (config.state.multiplier) {
+                                    state.multiplier = config.state.multiplier;
+                                    elements.multiplierSlider.value = state.multiplier;
+                                }
+                                if (config.state.currentTheme) {
+                                    state.currentTheme = config.state.currentTheme;
+                                    render.applyTheme();
+                                }
+                                if (config.state.unitSystem) {
+                                    state.unitSystem = config.state.unitSystem;
+                                }
+                            }
+                            
+                            // Import recipe
+                            if (config.recipe) {
+                                state.originalRecipe = config.recipe;
+                                elements.recipeInput.value = config.recipe;
+                            }
+                            
+                            // Update displays
+                            render.updateMultiplierDisplay();
+                            render.updateRecipeDisplay();
+                            
+                            render.showNotification('Configuration imported successfully', 'success');
+                            
+                        } catch (error) {
+                            render.showNotification('Invalid configuration file', 'error');
+                        }
+                    };
+                    
+                    reader.readAsText(file);
+                    elements.importFile.value = '';
+                },
+
+                // Export full configuration
+                exportFullConfiguration: function() {
+                    const fullConfig = {
+                        app: 'RecipeScaler',
+                        version: '1.0',
+                        timestamp: new Date().toISOString(),
+                        settings: {
+                            useFractions: state.useFractions,
+                            highlightScaled: state.highlightScaled,
+                            autoParse: state.autoParse,
+                            roundToEighth: state.roundToEighth,
+                            showEquipmentWarnings: state.showEquipmentWarnings,
+                            isMetric: state.isMetric,
+                            currentTheme: state.currentTheme
+                        },
+                        recipeState: {
+                            multiplier: state.multiplier,
+                            originalServings: state.originalServings,
+                            originalRecipe: state.originalRecipe
+                        }
+                    };
+                    
+                    const dataStr = JSON.stringify(fullConfig, null, 2);
+                    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                    
+                    const exportFileDefaultName = `recipe-scaler-full-${new Date().toISOString().slice(0,10)}.json`;
+                    
+                    const linkElement = document.createElement('a');
+                    linkElement.setAttribute('href', dataUri);
+                    linkElement.setAttribute('download', exportFileDefaultName);
+                    linkElement.click();
+                    
+                    render.showNotification('Full configuration exported', 'success');
+                },
+
+                // Generate shopping list
+                generateShoppingList: function() {
+                    const scaledIngredients = state.parsedIngredients.map(ing => 
+                        utils.scaleIngredient(ing, state.multiplier)
+                    );
+                    
+                    const measurableIngredients = scaledIngredients.filter(ing => 
+                        ing.scaledAmount && ing.unit && !['pinch', 'dash', 'to taste'].includes(ing.unit.toLowerCase())
+                    );
+                    
+                    if (measurableIngredients.length === 0) {
+                        render.showNotification('No measurable ingredients found', 'error');
+                        return;
+                    }
+                    
+                    const shoppingList = measurableIngredients.map(ing => 
+                        `• ${ing.displayAmount} ${ing.unit} ${ing.name}`
+                    ).join('\n');
+                    
+                    const listContent = `Shopping List (${state.multiplier.toFixed(2)}x):\n\n${shoppingList}`;
+                    
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(`
+                        <html>
+                            <head>
+                                <title>Shopping List - RecipeScaler</title>
+                                <style>
+                                    body { font-family: Arial, sans-serif; padding: 20px; }
+                                    h1 { color: #34A853; }
+                                    ul { line-height: 1.6; }
+                                </style>
+                            </head>
+                            <body>
+                                <h1>Shopping List</h1>
+                                <pre>${listContent}</pre>
+                                <button onclick="window.print()">Print List</button>
+                            </body>
+                        </html>
+                    `);
+                    printWindow.document.close();
+                },
+
+                // Show pan calculator
+                showPanCalculator: function() {
+                    const panContent = `
+                        <div style="padding: 20px;">
+                            <h3>Pan Size Calculator</h3>
+                            <p>Enter original pan dimensions:</p>
+                            <input type="number" id="originalWidth" placeholder="Width (inches)" style="width: 100px; margin: 5px;">
+                            <input type="number" id="originalLength" placeholder="Length (inches)" style="width: 100px; margin: 5px;">
+                            <p>Suggested scaled pan sizes for ${state.multiplier.toFixed(2)}x:</p>
+                            <div id="panResults" style="background: #f0f7ff; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                                Enter dimensions above
+                            </div>
+                            <button onclick="calculatePan()" style="margin-top: 10px;">Calculate</button>
+                        </div>
+                    `;
+                    
+                    const panWindow = window.open('', '_blank', 'width=400,height=300');
+                    panWindow.document.write(`
+                        <html>
+                            <head>
+                                <title>Pan Calculator - RecipeScaler</title>
+                                <style>
+                                    body { font-family: Arial, sans-serif; margin: 0; }
+                                    input { padding: 5px; }
+                                    button { padding: 10px; background: #4285F4; color: white; border: none; border-radius: 5px; cursor: pointer; }
+                                </style>
+                            </head>
+                            <body>
+                                ${panContent}
+                                <script>
+                                    function calculatePan() {
+                                        const width = parseFloat(document.getElementById('originalWidth').value);
+                                        const length = parseFloat(document.getElementById('originalLength').value);
+                                        const multiplier = ${state.multiplier};
+                                        
+                                        if (!width || !length) {
+                                            document.getElementById('panResults').innerHTML = 'Please enter both dimensions';
+                                            return;
+                                        }
+                                        
+                                        const originalArea = width * length;
+                                        const scaledArea = originalArea * multiplier;
+                                        
+                                        const suggestions = [
+                                            { name: '8-inch round', area: 50.27 },
+                                            { name: '9-inch round', area: 63.62 },
+                                            { name: '9x13 inch', area: 117 },
+                                            { name: '8x8 inch', area: 64 },
+                                            { name: '10x15 inch', area: 150 },
+                                            { name: '11x17 inch', area: 187 }
+                                        ];
+                                        
+                                        let closest = suggestions[0];
+                                        let minDiff = Math.abs(scaledArea - suggestions[0].area);
+                                        
+                                        for (const pan of suggestions) {
+                                            const diff = Math.abs(scaledArea - pan.area);
+                                            if (diff < minDiff) {
+                                                minDiff = diff;
+                                                closest = pan;
+                                            }
+                                        }
+                                        
+                                        document.getElementById('panResults').innerHTML = \`
+                                            Original area: \${originalArea.toFixed(1)} sq in<br>
+                                            Scaled area needed: \${scaledArea.toFixed(1)} sq in<br><br>
+                                            <strong>Suggested pan:</strong> \${closest.name}<br>
+                                            Area: \${closest.area.toFixed(1)} sq in
+                                        \`;
+                                    }
+                                <\/script>
+                            </body>
+                        </html>
+                    `);
+                    panWindow.document.close();
+                },
+
+                // Reset all handler
+                resetAll: function() {
+                    if (confirm('Reset all inputs and scaling to defaults?')) {
+                        state.originalRecipe = '';
+                        state.parsedIngredients = [];
+                        state.multiplier = 1;
+                        state.originalServings = 4;
+                        
+                        elements.recipeInput.value = '';
+                        elements.servingsInput.value = '4';
+                        elements.multiplierSlider.value = '1';
+                        elements.customMultiplier.value = '';
+                        
+                        render.updateMultiplierDisplay();
+                        render.updateRecipeDisplay();
+                        
+                        render.showNotification('All inputs reset', 'success');
+                    }
+                },
+
+                // Open settings panel
+                openSettings: function() {
+                    elements.settingsPanel.classList.add('active');
+                    state.settingsOpen = true;
+                },
+
+                // Close settings panel
+                closeSettings: function() {
+                    elements.settingsPanel.classList.remove('active');
+                    state.settingsOpen = false;
+                },
+
+                // Open guide panel
+                openGuide: function() {
+                    elements.guidePanel.classList.add('active');
+                    state.guideOpen = true;
+                },
+
+                // Close guide panel
+                closeGuide: function() {
+                    elements.guidePanel.classList.remove('active');
+                    state.guideOpen = false;
+                },
+
+                // Reset settings to defaults
+                resetSettings: function() {
+                    if (confirm('Reset all settings to defaults?')) {
+                        state.useFractions = true;
+                        state.highlightScaled = true;
+                        state.autoParse = false;
+                        state.roundToEighth = true;
+                        state.showEquipmentWarnings = true;
+                        state.isMetric = false;
+                        state.currentTheme = 'light';
+                        
+                        elements.useFractions.checked = state.useFractions;
+                        elements.highlightScaled.checked = state.highlightScaled;
+                        elements.autoParse.checked = state.autoParse;
+                        elements.roundToEighth.checked = state.roundToEighth;
+                        elements.showEquipmentWarnings.checked = state.showEquipmentWarnings;
+                        
+                        render.applyTheme();
+                        render.updateUnitButtons();
+                        render.updateRecipeDisplay();
+                        
+                        render.showNotification('Settings reset to defaults', 'success');
+                    }
+                }
+            };
+
+            // ===== PUBLIC API =====
+            return {
+                init: function() {
+                    handlers.init();
+                    console.log('RecipeScaler initialized successfully');
+                },
+                
+                // Expose for debugging if needed
+                getState: () => ({ ...state }),
+                getThemes: () => ({ ...themes })
+            };
+        })();
+
+        // ===== INITIALIZE APPLICATION =====
+        document.addEventListener('DOMContentLoaded', function() {
+            RecipeScaler.init();
+        });
+    </script>
+</body>
+</html>
